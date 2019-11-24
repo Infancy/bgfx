@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2018 Branimir Karadzic. All rights reserved.
+ * Copyright 2011-2019 Branimir Karadzic. All rights reserved.
  * License: https://github.com/bkaradzic/bgfx#license-bsd-2-clause
  */
 
@@ -20,9 +20,6 @@ namespace bgfx
 	///
 	const char* getAttribNameShort(Attrib::Enum _attr);
 
-	/// Dump vertex declaration into debug output.
-	void dump(const VertexDecl& _decl);
-
 	///
 	Attrib::Enum idToAttrib(uint16_t id);
 
@@ -33,10 +30,10 @@ namespace bgfx
 	AttribType::Enum idToAttribType(uint16_t id);
 
 	///
-	int32_t write(bx::WriterI* _writer, const bgfx::VertexDecl& _decl, bx::Error* _err = NULL);
+	int32_t write(bx::WriterI* _writer, const bgfx::VertexLayout& _layout, bx::Error* _err = NULL);
 
 	///
-	int32_t read(bx::ReaderI* _reader, bgfx::VertexDecl& _decl, bx::Error* _err = NULL);
+	int32_t read(bx::ReaderI* _reader, bgfx::VertexLayout& _layout, bx::Error* _err = NULL);
 
 } // namespace bgfx
 

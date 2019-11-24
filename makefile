@@ -1,5 +1,5 @@
 #
-# Copyright 2011-2018 Branimir Karadzic. All rights reserved.
+# Copyright 2011-2019 Branimir Karadzic. All rights reserved.
 # License: https://github.com/bkaradzic/bgfx#license-bsd-2-clause
 #
 
@@ -39,7 +39,6 @@ clean: ## Clean all intermediate files.
 	@mkdir .build
 
 projgen: ## Generate project files for all configurations.
-	$(GENIE) --with-tools --with-combined-examples --with-shared-lib                       vs2015
 	$(GENIE) --with-tools --with-combined-examples --with-shared-lib                       vs2017
 	$(GENIE) --with-tools --with-combined-examples                   --vs=winstore100      vs2017
 	$(GENIE) --with-tools --with-combined-examples --with-shared-lib --gcc=mingw-gcc       gmake
@@ -49,14 +48,18 @@ projgen: ## Generate project files for all configurations.
 	$(GENIE) --with-tools --with-combined-examples --with-shared-lib --xcode=ios           xcode8
 	$(GENIE)              --with-combined-examples --with-shared-lib --gcc=freebsd         gmake
 	$(GENIE)              --with-combined-examples                   --gcc=android-arm     gmake
-	$(GENIE)              --with-combined-examples                   --gcc=android-mips    gmake
+	$(GENIE)              --with-combined-examples                   --gcc=android-arm64   gmake
 	$(GENIE)              --with-combined-examples                   --gcc=android-x86     gmake
-	$(GENIE)              --with-combined-examples                   --gcc=asmjs           gmake
+	$(GENIE)              --with-examples                            --gcc=asmjs           gmake
 	$(GENIE)              --with-combined-examples                   --gcc=ios-arm         gmake
 	$(GENIE)              --with-combined-examples                   --gcc=ios-arm64       gmake
 	$(GENIE)              --with-combined-examples                   --gcc=ios-simulator   gmake
 	$(GENIE)              --with-combined-examples                   --gcc=ios-simulator64 gmake
 	$(GENIE)              --with-combined-examples                   --gcc=rpi             gmake
+
+idl: ## Generate code from IDL.
+	@echo Generating code from IDL.
+	$(GENIE) idl
 
 .build/projects/gmake-android-arm:
 	$(GENIE) --gcc=android-arm gmake
@@ -66,13 +69,13 @@ android-arm-release: .build/projects/gmake-android-arm ## Build - Android ARM Re
 	$(MAKE) -R -C .build/projects/gmake-android-arm config=release
 android-arm: android-arm-debug android-arm-release ## Build - Android ARM Debug and Release
 
-.build/projects/gmake-android-mips:
-	$(GENIE) --gcc=android-mips gmake
-android-mips-debug: .build/projects/gmake-android-mips ## Build - Android MIPS Debug
-	$(MAKE) -R -C .build/projects/gmake-android-mips config=debug
-android-mips-release: .build/projects/gmake-android-mips ## Build - Android MIPS Release
-	$(MAKE) -R -C .build/projects/gmake-android-mips config=release
-android-mips: android-mips-debug android-mips-release ## Build - Android MIPS Debug and Release
+.build/projects/gmake-android-arm64:
+	$(GENIE) --gcc=android-arm64 gmake
+android-arm64-debug: .build/projects/gmake-android-arm64 ## Build - Android ARM64 Debug
+	$(MAKE) -R -C .build/projects/gmake-android-arm64 config=debug
+android-arm64-release: .build/projects/gmake-android-arm64 ## Build - Android ARM64 Release
+	$(MAKE) -R -C .build/projects/gmake-android-arm64 config=release
+android-arm64: android-arm64-debug android-arm64-release ## Build - Android ARM64 Debug and Release
 
 .build/projects/gmake-android-x86:
 	$(GENIE) --gcc=android-x86 gmake
@@ -134,18 +137,6 @@ mingw-clang-release64: .build/projects/gmake-mingw-clang ## Build - MinGW Clang 
 	$(MAKE) -R -C .build/projects/gmake-mingw-clang config=release64
 mingw-clang: mingw-clang-debug32 mingw-clang-release32 mingw-clang-debug64 mingw-clang-release64 ## Build - MinGW Clang x86/x64 Debug and Release
 
-.build/projects/vs2015:
-	$(GENIE) --with-tools --with-combined-examples --with-shared-lib vs2015
-vs2015-debug32: .build/projects/vs2015 ## Build - VS2015 x86 Debug
-	devenv .build/projects/vs2015/bgfx.sln /Build "Debug|Win32"
-vs2015-release32: .build/projects/vs2015 ## Build - VS2015 x86 Release
-	devenv .build/projects/vs2015/bgfx.sln /Build "Release|Win32"
-vs2015-debug64: .build/projects/vs2015 ## Build - VS2015 x64 Debug
-	devenv .build/projects/vs2015/bgfx.sln /Build "Debug|x64"
-vs2015-release64: .build/projects/vs2015 ## Build - VS2015 x64 Release
-	devenv .build/projects/vs2015/bgfx.sln /Build "Release|x64"
-vs2015: vs2015-debug32 vs2015-release32 vs2015-debug64 vs2015-release64 ## Build - VS2015 x86/x64 Debug and Release
-
 .build/projects/vs2017:
 	$(GENIE) --with-tools --with-combined-examples --with-shared-lib vs2017
 vs2017-debug32: .build/projects/vs2017 ## Build - vs2017 x86 Debug
@@ -176,7 +167,7 @@ osx-debug64: .build/projects/gmake-osx ## Build - OSX x64 Debug
 	$(MAKE) -C .build/projects/gmake-osx config=debug64
 osx-release64: .build/projects/gmake-osx ## Build - OSX x64 Release
 	$(MAKE) -C .build/projects/gmake-osx config=release64
-osx: osx-debug64 osx-release64 ## Build - OSX x86/x64 Debug and Release
+osx: osx-debug64 osx-release64 ## Build - OSX x64 Debug and Release
 
 .build/projects/gmake-ios-arm:
 	$(GENIE) --gcc=ios-arm gmake
@@ -283,6 +274,10 @@ geometryc: .build/projects/$(BUILD_PROJECT_DIR) ## Build geometryc tool.
 	$(SILENT) $(MAKE) -C .build/projects/$(BUILD_PROJECT_DIR) geometryc config=$(BUILD_TOOLS_CONFIG)
 	$(SILENT) cp .build/$(BUILD_OUTPUT_DIR)/bin/geometryc$(BUILD_TOOLS_SUFFIX)$(EXE) tools/bin/$(OS)/geometryc$(EXE)
 
+geometryv: .build/projects/$(BUILD_PROJECT_DIR) ## Build geometryv tool.
+	$(SILENT) $(MAKE) -C .build/projects/$(BUILD_PROJECT_DIR) geometryv config=$(BUILD_TOOLS_CONFIG)
+	$(SILENT) cp .build/$(BUILD_OUTPUT_DIR)/bin/geometryv$(BUILD_TOOLS_SUFFIX)$(EXE) tools/bin/$(OS)/geometryv$(EXE)
+
 shaderc: .build/projects/$(BUILD_PROJECT_DIR) ## Build shaderc tool.
 	$(SILENT) $(MAKE) -C .build/projects/$(BUILD_PROJECT_DIR) shaderc config=$(BUILD_TOOLS_CONFIG)
 	$(SILENT) cp .build/$(BUILD_OUTPUT_DIR)/bin/shaderc$(BUILD_TOOLS_SUFFIX)$(EXE) tools/bin/$(OS)/shaderc$(EXE)
@@ -295,7 +290,7 @@ texturev: .build/projects/$(BUILD_PROJECT_DIR) ## Build texturev tool.
 	$(SILENT) $(MAKE) -C .build/projects/$(BUILD_PROJECT_DIR) texturev config=$(BUILD_TOOLS_CONFIG)
 	$(SILENT) cp .build/$(BUILD_OUTPUT_DIR)/bin/texturev$(BUILD_TOOLS_SUFFIX)$(EXE) tools/bin/$(OS)/texturev$(EXE)
 
-tools: geometryc shaderc texturec texturev ## Build tools.
+tools: geometryc geometryv shaderc texturec texturev ## Build tools.
 
 clean-tools: ## Clean tools projects.
 	-$(SILENT) rm -r .build/projects/$(BUILD_PROJECT_DIR)
@@ -303,6 +298,8 @@ clean-tools: ## Clean tools projects.
 dist-windows: .build/projects/gmake-mingw-gcc
 	$(SILENT) $(MAKE) -C .build/projects/gmake-mingw-gcc config=release64 -j 6 geometryc
 	$(SILENT) cp .build/win64_mingw-gcc/bin/geometrycRelease.exe tools/bin/windows/geometryc.exe
+	$(SILENT) $(MAKE) -C .build/projects/gmake-mingw-gcc config=release64 -j 6 geometryv
+	$(SILENT) cp .build/win64_mingw-gcc/bin/geometryvRelease.exe tools/bin/windows/geometryv.exe
 	$(SILENT) $(MAKE) -C .build/projects/gmake-mingw-gcc config=release64 -j 6 shaderc
 	$(SILENT) cp .build/win64_mingw-gcc/bin/shadercRelease.exe   tools/bin/windows/shaderc.exe
 	$(SILENT) $(MAKE) -C .build/projects/gmake-mingw-gcc config=release64 -j 6 texturec
@@ -313,6 +310,8 @@ dist-windows: .build/projects/gmake-mingw-gcc
 dist-linux: .build/projects/gmake-linux
 	$(SILENT) $(MAKE) -C .build/projects/gmake-linux     config=release64 -j 6 geometryc
 	$(SILENT) cp .build/linux64_gcc/bin/geometrycRelease tools/bin/linux/geometryc
+	$(SILENT) $(MAKE) -C .build/projects/gmake-linux     config=release64 -j 6 geometryv
+	$(SILENT) cp .build/linux64_gcc/bin/geometryvRelease tools/bin/linux/geometryv
 	$(SILENT) $(MAKE) -C .build/projects/gmake-linux     config=release64 -j 6 shaderc
 	$(SILENT) cp .build/linux64_gcc/bin/shadercRelease   tools/bin/linux/shaderc
 	$(SILENT) $(MAKE) -C .build/projects/gmake-linux     config=release64 -j 6 texturec
@@ -323,6 +322,8 @@ dist-linux: .build/projects/gmake-linux
 dist-darwin: .build/projects/gmake-osx
 	$(SILENT) $(MAKE) -C .build/projects/gmake-osx       config=release64 -j 6 geometryc
 	$(SILENT) cp .build/osx64_clang/bin/geometrycRelease tools/bin/darwin/geometryc
+	$(SILENT) $(MAKE) -C .build/projects/gmake-osx       config=release64 -j 6 geometryv
+	$(SILENT) cp .build/osx64_clang/bin/geometryvRelease tools/bin/darwin/geometryv
 	$(SILENT) $(MAKE) -C .build/projects/gmake-osx       config=release64 -j 6 shaderc
 	$(SILENT) cp .build/osx64_clang/bin/shadercRelease   tools/bin/darwin/shaderc
 	$(SILENT) $(MAKE) -C .build/projects/gmake-osx       config=release64 -j 6 texturec
