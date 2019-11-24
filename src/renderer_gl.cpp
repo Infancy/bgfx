@@ -6279,6 +6279,7 @@ BX_TRACE("%d, %d, %d, %s", _array, _srgb, _mipAutogen, getName(_format) );
 			renderDocTriggerCapture();
 		}
 
+		// 没窗口或不支持 vao 的时候才这么做
 		if (1 < m_numWindows
 		&&  m_vaoSupport)
 		{
@@ -6290,7 +6291,8 @@ BX_TRACE("%d, %d, %d, %s", _array, _srgb, _mipAutogen, getName(_format) );
 
 		m_glctx.makeCurrent(NULL);
 
-		const GLuint defaultVao = m_vao;
+		// 先绑定一堆东西作为这次 draw 的 current_target
+		const GLuint defaultVao = m_vao; // in fay: const GLuint vao = m_vao;
 		if (0 != defaultVao)
 		{
 			GL_CHECK(glBindVertexArray(defaultVao) );
@@ -6395,6 +6397,8 @@ BX_TRACE("%d, %d, %d, %s", _array, _srgb, _mipAutogen, getName(_format) );
 
 		uint8_t eye = 0;
 
+		// 这个判断条件在干什么
+		// 这一千多行在渲染？？？
 		if (0 == (_render->m_debug&BGFX_DEBUG_IFH) )
 		{
 			GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, m_msaaBackBufferFbo) );
@@ -7183,6 +7187,7 @@ BX_TRACE("%d, %d, %d, %s", _array, _srgb, _mipAutogen, getName(_format) );
 
 								boundProgramIdx = programIdx;
 
+								// 绑定顶点缓冲区属性、实例缓冲区属性
 								program.bindAttributesBegin();
 
 								if (UINT8_MAX != draw.m_streamMask)
@@ -7247,6 +7252,7 @@ BX_TRACE("%d, %d, %d, %s", _array, _srgb, _mipAutogen, getName(_format) );
 							m_occlusionQuery.begin(_render, draw.m_occlusionQuery);
 						}
 
+						// 终于开始渲染了，不是间接就是实例渲染
 						if (isValid(draw.m_indirectBuffer) )
 						{
 							const VertexBufferGL& vb = m_vertexBuffers[draw.m_indirectBuffer.idx];
@@ -7358,6 +7364,7 @@ BX_TRACE("%d, %d, %d, %s", _array, _srgb, _mipAutogen, getName(_format) );
 							m_occlusionQuery.end();
 						}
 
+						// 为什么只解绑 instance data
 						if(isValid(draw.m_instanceDataBuffer))
 						{
 							program.unbindInstanceData();
@@ -7444,6 +7451,7 @@ BX_TRACE("%d, %d, %d, %s", _array, _srgb, _mipAutogen, getName(_format) );
 		perfStats.gpuMemoryMax  = -INT64_MAX;
 		perfStats.gpuMemoryUsed = -INT64_MAX;
 
+		// debug 模式下打印点调试数据
 		if (_render->m_debug & (BGFX_DEBUG_IFH|BGFX_DEBUG_STATS) )
 		{
 			m_needPresent = true;

@@ -1305,7 +1305,7 @@ namespace bgfx { namespace gl
 		void resolve();
 		void discard(uint16_t _flags);
 
-		SwapChainGL* m_swapChain;
+		SwapChainGL* m_swapChain; // egl, glx, wgl
 		GLuint m_fbo[2];
 		uint32_t m_width;
 		uint32_t m_height;
